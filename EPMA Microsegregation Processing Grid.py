@@ -75,10 +75,36 @@ plt.ylabel('Concentration (wt.%)')
 plt.title("Concentration of Elements")
 #
 plt.legend()
-plt.xlim(30,35)
+#plt.xlim(30,35)
 #plt.ylim(0,40)
 #
 plt.show()
+# %%Lets get Plotting Function of Cr
+# make subplots?
+plt.scatter(Cr,Si,label="Si")
+plt.scatter(Cr,Fe,label="Fe")
+#plt.plot(Fe,Fe,label="Fe")
+plt.scatter(Cr,Ni,label="Ni")
+#plt.scatter(Fe,W,label="W")
+plt.scatter(Cr,Nb,label="Nb")
+#plt.scatter(Fe,Mo,label="Mo")
+plt.scatter(Cr,W,label="Mn")
+#plt.plot(Fe,Ti,label="Ti")
+#
+#
+#plt.xlabel('Distance (um)')
+plt.xlabel('Concentration Cr (wt.%)')
+#
+plt.ylabel('Concentration (wt.%)')
+#
+plt.title("Concentration of Elements")
+#
+plt.legend()
+#plt.xlim(30,35)
+#plt.ylim(0,40)
+#
+plt.show()
+
 
 # %% Subplots
 
@@ -103,7 +129,7 @@ totalwtlow=97 #threshold for filtering interdendritic regions may need to be twe
 totalwthigh=103
 crmax=30
 nbmax=1
-maxfs=82.19485515/100
+maxfs=0.96#82.19485515/100
 
 
 max_filter = (data['Elemental Totals']>totalwtlow) & (data["Cr Elemental Percents"] < crmax) & (data["Nb Elemental Percents"] < nbmax) & (data['Elemental Totals']<totalwthigh)
@@ -315,6 +341,22 @@ plt.xlabel('Ln(Fraction Solid)')
 plt.ylabel('Ln(Cs/C0)') 
 plt.show()
 
+plt.plot(lnFL, lnCsNb, 'o', color ='red', label ="data") 
+plt.plot(lnFL, ansNb, '--', color ='blue', label ="optimized data") 
+plt.legend() 
+plt.title("Nb")
+plt.xlabel('Ln(Fraction Solid)')
+plt.ylabel('Ln(Cs/C0)') 
+plt.show()
+
+plt.plot(lnFL, lnCsFe, 'o', color ='red', label ="data") 
+plt.plot(lnFL, ansFe, '--', color ='blue', label ="optimized data") 
+plt.legend() 
+plt.title("Fe")
+plt.xlabel('Ln(Fraction Solid)')
+plt.ylabel('Ln(Cs/C0)') 
+plt.show()
+
 #define new k values
 KSi_line=Siparam[0] #abs(1-Siparam[0])
 print(KSi_line)
@@ -345,9 +387,10 @@ Mnmodel=sm.OLS(lnCsMn,X).fit()
 Mnmodel.summary()
 Nimodel=sm.OLS(lnCsNi,X).fit()
 Nimodel.summary()
+Femodel=sm.OLS(lnCsFe,X).fit()
+Femodel.summary()
 
 # %% Scheil Calculation
-
 def scheil(k,Cnom,fs):
        return k*Cnom*(1-fs)**(k-1)
 #from dendrite core k values
@@ -359,6 +402,7 @@ NEQ_Mn=scheil(KMn,C0Mn,f_solid)
 NEQ_Nb=scheil(KNb,C0Nb,f_solid)
 #NEQ_Mo=scheil(KMo,C0Mo,f_solid)
 
+# %% Equlibrium Calculation
 def equil(k,Cnom,fs):
        return k*Cnom/((1-fs)+k*fs)
 
@@ -370,34 +414,36 @@ EQ_Mn=equil(KMn,C0Mn,f_solid)
 EQ_Nb=equil(KNb,C0Nb,f_solid)
 #EQ_Mo=equil(KMo,C0Mo,f_solid)
 
+# %% Brody Flemings Calculation-work in progress
 def BF(k,Cnom,fs,alpha):
        return k*Cnom*(1-(1-2*alpha*k)*fs)**((k-1)/(1-2*alpha*k))
    
+# %% Plot solidification path     
 figure(num=None, figsize=(10, 15), dpi=80, facecolor='w', edgecolor='k')
-plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Si Elemental Percents'],label="Si")
-plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Cr Elemental Percents'],label="Cr")
-plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Fe Elemental Percents'],label="Fe")
-plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Ni Elemental Percents'],label="Ni")
-plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Nb Elemental Percents'],label="Nb")
+plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Si Elemental Percents'],label="Si", color='blue')
+plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Cr Elemental Percents'],label="Cr", color='green')
+plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Fe Elemental Percents'],label="Fe", color='red')
+plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Ni Elemental Percents'],label="Ni", color='magenta')
+plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Nb Elemental Percents'],label="Nb", color='cyan')
 #plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Mo Elemental Percents'],label="Mo")
-plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Mn Elemental Percents'],label="Mn")
+plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Mn Elemental Percents'],label="Mn", color='black')
 
 
-plt.plot(primary_y_sort['Fsolid'],NEQ_Si,label="NESi")
-plt.plot(primary_y_sort['Fsolid'],NEQ_Cr,label="NECr")
-plt.plot(primary_y_sort['Fsolid'],NEQ_Fe,label="NEFe")
-plt.plot(primary_y_sort['Fsolid'],NEQ_Ni,label="NENi")
-plt.plot(primary_y_sort['Fsolid'],NEQ_Nb,label="NENb")
+plt.plot(primary_y_sort['Fsolid'],NEQ_Si,label="NESi", color='blue')
+plt.plot(primary_y_sort['Fsolid'],NEQ_Cr,label="NECr", color='green')
+plt.plot(primary_y_sort['Fsolid'],NEQ_Fe,label="NEFe", color='red')
+plt.plot(primary_y_sort['Fsolid'],NEQ_Ni,label="NENi", color='magenta')
+plt.plot(primary_y_sort['Fsolid'],NEQ_Nb,label="NENb", color='cyan')
 #plt.plot(primary_y_sort['Fsolid'],NEQ_Mo,label="NEMo")
-plt.plot(primary_y_sort['Fsolid'],NEQ_Mn,label="NEMn")
+plt.plot(primary_y_sort['Fsolid'],NEQ_Mn,label="NEMn", color='black')
 
-plt.plot(primary_y_sort['Fsolid'],EQ_Si,label="ESi")
-plt.plot(primary_y_sort['Fsolid'],EQ_Cr,label="ECr")
-plt.plot(primary_y_sort['Fsolid'],EQ_Fe,label="EFe")
-plt.plot(primary_y_sort['Fsolid'],EQ_Ni,label="ENi")
-plt.plot(primary_y_sort['Fsolid'],EQ_Nb,label="ENb")
+plt.plot(primary_y_sort['Fsolid'],EQ_Si,label="ESi", color='blue')
+plt.plot(primary_y_sort['Fsolid'],EQ_Cr,label="ECr", color='green')
+plt.plot(primary_y_sort['Fsolid'],EQ_Fe,label="EFe", color='red')
+plt.plot(primary_y_sort['Fsolid'],EQ_Ni,label="ENi", color='magenta')
+plt.plot(primary_y_sort['Fsolid'],EQ_Nb,label="ENb", color='cyan')
 #plt.plot(primary_y_sort['Fsolid'],EQ_Mo,label="EMo")
-plt.plot(primary_y_sort['Fsolid'],EQ_Mn,label="EMn")
+plt.plot(primary_y_sort['Fsolid'],EQ_Mn,label="EMn", color='black')
 
 
 plt.xlabel('Fraction Solid')
@@ -443,4 +489,6 @@ plt.show()
 #
 ## Print out the statistics
 #model.summary()
+# %% Output table?
+
 
