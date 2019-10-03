@@ -19,9 +19,11 @@ import statsmodels.api as sm
 from matplotlib.pyplot import figure
 import math
 # %% Import EPMA data
-filename='10_1_19 DataBase W Mo Ti disabled new filament _Un   29  Duraloy M10 CCnew Mn.xlsx'
+""" Paste Filename Here"""
+#filename='10_1_19 DataBase W Mo Ti disabled new filament _Un   29  Duraloy M10 CCnew Mn.xlsx'
 #filename='9_27_19 DataBase W Ti disabled_Un   25  MT418 DTA Grid.xlsx'
 #filename='9_24_19 DataBase W Ti disabled_Un   20  418 DTA Linetrace Core.xlsx'
+filename='10_1_19 DataBase W Mo Ti disabled new filament _Un   32  HP-2 DTA.xlsx'
 data = pd.read_excel(filename)
 data.head
 [Len,Wid]=data.shape
@@ -122,17 +124,27 @@ axs[5].scatter(Fe,Mn)
 #plt.xlim(30,35)
 #plt.ylim(0,40)
 
+# %% Filter for Carbides
+totalwtcarbide = 95 #max comp for filtering for carbides
+M7_filter = (data['Elemental Totals']<totalwtcarbide) & (data["Cr Elemental Percents"] > 70)
+M7_comp=data[M7_filter]
+print(M7_comp)
+
+MC_filter = (data['Elemental Totals']<totalwtcarbide) & (data["Nb Elemental Percents"] > 80)
+MC_comp=data[MC_filter]
+print(MC_comp)
 
 # %% WIRS
 #filter dataset to remove interdendritic regions
 totalwtlow=97 #threshold for filtering interdendritic regions may need to be tweaked
 totalwthigh=103
-crmax=30
+crmax=35
 nbmax=1
+nimin=30
 maxfs=0.96#82.19485515/100
 
 
-max_filter = (data['Elemental Totals']>totalwtlow) & (data["Cr Elemental Percents"] < crmax) & (data["Nb Elemental Percents"] < nbmax) & (data['Elemental Totals']<totalwthigh)
+max_filter = (data['Elemental Totals']>totalwtlow) & (data["Cr Elemental Percents"] < crmax) & (data["Nb Elemental Percents"] < nbmax) & (data['Elemental Totals']<totalwthigh) & (data["Ni Elemental Percents"] > nimin)
 primary_y=data[max_filter]
 print(primary_y)
 
@@ -267,7 +279,7 @@ print(KMnc0)
 lnCsSi=np.log(primary_y_sort['Si Elemental Percents'].div(data["Si Elemental Percents"].mean()))
 lnCsCr=np.log(primary_y_sort['Cr Elemental Percents'].div(data["Cr Elemental Percents"].mean()))
 lnCsFe=np.log(primary_y_sort['Fe Elemental Percents'].div(data["Fe Elemental Percents"].mean()))
-lnCsNi=np.log(primary_y_sort['Ni Elemental Percents'].div(primary_y_sort["Ni Elemental Percents"].mean()))
+lnCsNi=np.log(primary_y_sort['Ni Elemental Percents'].div(data["Ni Elemental Percents"].mean()))
 lnCsNb=np.log(primary_y_sort['Nb Elemental Percents'].div(data["Nb Elemental Percents"].mean()))
 #lnCsMo=np.log(primary_y_sort['Mo Elemental Percents'].div(data["Mo Elemental Percents"].mean()))
 lnCsMn=np.log(primary_y_sort['Mn Elemental Percents'].div(data["Mn Elemental Percents"].mean()))
