@@ -20,10 +20,11 @@ from matplotlib.pyplot import figure
 import math
 # %% Import EPMA data
 """ Paste Filename Here"""
-#filename='10_1_19 DataBase W Mo Ti disabled new filament _Un   29  Duraloy M10 CCnew Mn.xlsx'
+filename='10_1_19 DataBase W Mo Ti disabled new filament _Un   29  Duraloy M10 CCnew Mn.xlsx'
+#filename='10_1_19 DataBase W Mo Ti disabled new filament _Un   33  Duraloy M10 DTA.xlsx'
 #filename='9_27_19 DataBase W Ti disabled_Un   25  MT418 DTA Grid.xlsx'
 #filename='9_24_19 DataBase W Ti disabled_Un   20  418 DTA Linetrace Core.xlsx'
-filename='10_1_19 DataBase W Mo Ti disabled new filament _Un   32  HP-2 DTA.xlsx'
+#filename='10_1_19 DataBase W Mo Ti disabled new filament _Un   32  HP-2 DTA.xlsx'
 data = pd.read_excel(filename)
 data.head
 [Len,Wid]=data.shape
@@ -113,9 +114,9 @@ plt.show()
 fig, axs = plt.subplots(6, sharex=True)
 fig.suptitle('Concentration wt% as a function of Fe')
 axs[0].scatter(Fe,Si)
-axs[0].set_title('Si')
+#axs[0].set_title('Si')
 axs[1].scatter(Fe,Cr)
-axs[1].set_title('Cr')
+#axs[1].set_title('Cr')
 axs[2].scatter(Fe,Ni)
 axs[3].scatter(Fe,Nb)
 axs[4].scatter(Fe,Mo)
@@ -128,25 +129,36 @@ axs[5].scatter(Fe,Mn)
 totalwtcarbide = 95 #max comp for filtering for carbides
 M7_filter = (data['Elemental Totals']<totalwtcarbide) & (data["Cr Elemental Percents"] > 70)
 M7_comp=data[M7_filter]
-print(M7_comp)
+AM7_comp=M7_comp.loc[:,"Si Elemental Percents":"V  Elemental Percents"].mean(axis=0)
+print(AM7_comp)
+
+#M7_comp1=M7_comp.loc['Element Totals':'V Elemental Percents']#.mean(axis=1)
+#print(M7_comp1)
+
 
 MC_filter = (data['Elemental Totals']<totalwtcarbide) & (data["Nb Elemental Percents"] > 80)
 MC_comp=data[MC_filter]
-print(MC_comp)
+AMC_comp=MC_comp.loc[:,"Si Elemental Percents":"V  Elemental Percents"].mean(axis=0)
+print(AMC_comp)
 
+Avg_comp=data.loc[:,"Si Elemental Percents":"V  Elemental Percents"].mean(axis=0)
+print(Avg_comp)
 # %% WIRS
 #filter dataset to remove interdendritic regions
 totalwtlow=97 #threshold for filtering interdendritic regions may need to be tweaked
 totalwthigh=103
-crmax=35
+crmax=26
 nbmax=1
 nimin=30
-maxfs=0.96#82.19485515/100
+nimax=36.5
+
+""" This value will influence the kline"""
+maxfs=1#0.96#0.899#82.19485515/100 HP-2 #0.96 for M10 #0.899 for HP
 
 
-max_filter = (data['Elemental Totals']>totalwtlow) & (data["Cr Elemental Percents"] < crmax) & (data["Nb Elemental Percents"] < nbmax) & (data['Elemental Totals']<totalwthigh) & (data["Ni Elemental Percents"] > nimin)
-primary_y=data[max_filter]
-print(primary_y)
+max_filter = (data['Elemental Totals']>totalwtlow) & (data["Cr Elemental Percents"] < crmax) & (data["Nb Elemental Percents"] < nbmax) & (data['Elemental Totals']<totalwthigh) & (data["Ni Elemental Percents"] > nimin) & (data["Ni Elemental Percents"] < nimax)
+primary_y=data#[max_filter]
+#print(primary_y)
 
 #plt.plot(primary_y['Relative Microns'],primary_y['          "Si Elemental Percents"'],label="Si")
 #plt.plot(primary_y['Relative Microns'],primary_y["Cr Elemental Percents"],label="Cr")
@@ -155,7 +167,7 @@ print(primary_y)
 #for negatively segregating elements
 primary_y['Si_bar']=(primary_y['Si Elemental Percents'] - primary_y['Si Elemental Percents'].min())/primary_y['Si Percent Errors']
 primary_y['Cr_bar']=(primary_y["Cr Elemental Percents"] - primary_y["Cr Elemental Percents"].min())/primary_y["Cr Percent Errors"]
-primary_y['Ni_bar']=(primary_y["Ni Elemental Percents"] - primary_y["Ni Elemental Percents"].min())/primary_y["Ni Percent Errors"]
+primary_y['Ni_bar']=(primary_y["Ni Elemental Percents"] - primary_y["Ni Elemental Percents"].min())/primary_y["Ni Percent Errors"] #if Ni negatively segregates
 primary_y['Nb_bar']=(primary_y["Nb Elemental Percents"] - primary_y["Nb Elemental Percents"].min())/primary_y["Nb Percent Errors"]
 #primary_y['Mo_bar']=(primary_y["Mo Elemental Percents"] - primary_y["Mo Elemental Percents"].min())/primary_y["Mo Percent Errors"]
 primary_y['Mn_bar']=(primary_y["Mn Elemental Percents"] - primary_y["Mn Elemental Percents"].min())/primary_y["Mn Percent Errors"]
@@ -164,6 +176,7 @@ primary_y['Mn_bar']=(primary_y["Mn Elemental Percents"] - primary_y["Mn Elementa
 
 #for positively segregating elements
 primary_y['Fe_bar']=(primary_y["Fe Elemental Percents"].max() - primary_y["Fe Elemental Percents"])/primary_y["Fe Percent Errors"]
+#primary_y['Ni_bar']=(primary_y["Ni Elemental Percents"].max() - primary_y["Ni Elemental Percents"])/primary_y["Ni Percent Errors"]
 #Ti_bar=(primary_y["Ti Elemental Percents"].max() - primary_y["Ti Elemental Percents"])/primary_y["Ti Percent Errors"]
 
 #Aggregate Values into a new dataframe
@@ -173,15 +186,15 @@ primary_y['Fe_bar']=(primary_y["Fe Elemental Percents"].max() - primary_y["Fe El
 #Cbar.columns=['Sibar', 'Crbar', 'Febar', 'Nibar', 'Nbbar', 'Mobar']
 #primary_y['Avgbar'] = primary_y[['Si_bar', 'Cr_bar', 'Fe_bar', 'Ni_bar', 'Nb_bar', 'Mo_bar', 'Mn_bar']].mean(axis=1)
 primary_y['Avgbar'] = primary_y[['Si_bar', 'Cr_bar', 'Fe_bar', 'Ni_bar', 'Nb_bar', 'Mn_bar']].mean(axis=1)
-print(primary_y)
+#print(primary_y)
 
 #sort according to Cbar min to max
 primary_y_sort=primary_y.sort_values(by=['Avgbar'])
-print(primary_y_sort)
+#print(primary_y_sort)
 primary_y_sort['Rank'] = primary_y_sort['Avgbar'].rank(ascending = 1)
-print(primary_y_sort)
+#print(primary_y_sort)
 primary_y_sort['Fsolid']=(primary_y_sort['Rank'] - 0.5)/primary_y_sort['Rank'].max()*maxfs
-print(primary_y_sort['Fsolid'])
+#print(primary_y_sort['Fsolid'])
 f_solid=primary_y_sort['Fsolid']
 
 # %%Lets get Plotting
@@ -211,9 +224,11 @@ plt.show()
 
 # %% Calculate k from Core
 #Nominal Composition
-C0={'Si':2.0,'Cr':25.39,'Fe':33.59,'Ni':35.71,'Nb':1.11,'Mn':0.95,'Mo':0.3}
+C0={'Si':1.929,'Cr':24.571,'Fe':37.695,'Ni':33.206,'Nb':1.28,'Mn':0.837,'Mo':0.07} #M10
+#C0={'Si':1.14,'Cr':25.2,'Fe':36.66,'Ni':35,'Nb':0.418,'Mn':0.899,'Mo':0.06} #HP-2
+#C0={'Si':1.929,'Cr':24.571,'Fe':37.695,'Ni':33.206,'Nb':1.28,'Mn':0.837,'Mo':0.07}
 
-acore=5 #points to average from start of sorted data
+acore=10 #points to average from start of sorted data
 
 #pull C0 estimates from grid
 C0Si=data['Si Elemental Percents'].mean()
@@ -325,7 +340,7 @@ ansNi = ((Niparam[0]-1)*lnFL+Niparam[1])
 ansFe = ((Feparam[0]-1)*lnFL+Feparam[1]) 
 ansNb = ((Nbparam[0]-1)*lnFL+Nbparam[1])
 #ansMo = ((Moparam[0]-1)*lnFL+Moparam[1]) 
-ansNi = ((Mnparam[0]-1)*lnFL+Mnparam[1])   
+ansMn = ((Mnparam[0]-1)*lnFL+Mnparam[1])   
 '''Below 4 lines can be un-commented for plotting results  
 using matplotlib as shown in the first example. '''
   
@@ -370,6 +385,7 @@ plt.ylabel('Ln(Cs/C0)')
 plt.show()
 
 #define new k values
+#K["Si"]=??
 KSi_line=Siparam[0] #abs(1-Siparam[0])
 print(KSi_line)
 KCr_line=Crparam[0] #abs(Crparam[0]-2) #Crparam[0]
@@ -401,12 +417,11 @@ Nimodel=sm.OLS(lnCsNi,X).fit()
 Nimodel.summary()
 Femodel=sm.OLS(lnCsFe,X).fit()
 Femodel.summary()
-
 # %% Scheil Calculation
 def scheil(k,Cnom,fs):
        return k*Cnom*(1-fs)**(k-1)
 #from dendrite core k values
-NEQ_Si=scheil(KSic0,C0Si,f_solid)
+NEQ_Si=scheil(KSi,C0Si,f_solid)
 NEQ_Cr=scheil(KCr,C0Cr,f_solid)
 NEQ_Fe=scheil(KFe,C0Fe,f_solid)
 NEQ_Ni=scheil(KNi,C0Ni,f_solid)
@@ -418,7 +433,7 @@ NEQ_Nb=scheil(KNb,C0Nb,f_solid)
 def equil(k,Cnom,fs):
        return k*Cnom/((1-fs)+k*fs)
 
-EQ_Si=equil(KSic0,C0Si,f_solid)
+EQ_Si=equil(KSi,C0Si,f_solid)
 EQ_Cr=equil(KCr,C0Cr,f_solid)
 EQ_Fe=equil(KFe,C0Fe,f_solid)
 EQ_Ni=equil(KNi,C0Ni,f_solid)
@@ -431,46 +446,118 @@ def BF(k,Cnom,fs,alpha):
        return k*Cnom*(1-(1-2*alpha*k)*fs)**((k-1)/(1-2*alpha*k))
    
 # %% Plot solidification path     
-figure(num=None, figsize=(10, 15), dpi=80, facecolor='w', edgecolor='k')
-plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Si Elemental Percents'],label="Si", color='blue')
+figure(num=None, figsize=(6, 4), dpi=100, facecolor='w', edgecolor='k')
+#plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Si Elemental Percents'],label="Si", color='blue')
 plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Cr Elemental Percents'],label="Cr", color='green')
 plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Fe Elemental Percents'],label="Fe", color='red')
 plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Ni Elemental Percents'],label="Ni", color='magenta')
-plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Nb Elemental Percents'],label="Nb", color='cyan')
+#plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Nb Elemental Percents'],label="Nb", color='cyan')
 #plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Mo Elemental Percents'],label="Mo")
-plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Mn Elemental Percents'],label="Mn", color='black')
+#plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Mn Elemental Percents'],label="Mn", color='black')
 
 
-plt.plot(primary_y_sort['Fsolid'],NEQ_Si,label="NESi", color='blue')
+#plt.plot(primary_y_sort['Fsolid'],NEQ_Si,label="NESi", color='blue')
 plt.plot(primary_y_sort['Fsolid'],NEQ_Cr,label="NECr", color='green')
 plt.plot(primary_y_sort['Fsolid'],NEQ_Fe,label="NEFe", color='red')
 plt.plot(primary_y_sort['Fsolid'],NEQ_Ni,label="NENi", color='magenta')
-plt.plot(primary_y_sort['Fsolid'],NEQ_Nb,label="NENb", color='cyan')
+#plt.plot(primary_y_sort['Fsolid'],NEQ_Nb,label="NENb", color='cyan')
 #plt.plot(primary_y_sort['Fsolid'],NEQ_Mo,label="NEMo")
-plt.plot(primary_y_sort['Fsolid'],NEQ_Mn,label="NEMn", color='black')
+#plt.plot(primary_y_sort['Fsolid'],NEQ_Mn,label="NEMn", color='black')
 
-plt.plot(primary_y_sort['Fsolid'],EQ_Si,label="ESi", color='blue')
-plt.plot(primary_y_sort['Fsolid'],EQ_Cr,label="ECr", color='green')
-plt.plot(primary_y_sort['Fsolid'],EQ_Fe,label="EFe", color='red')
-plt.plot(primary_y_sort['Fsolid'],EQ_Ni,label="ENi", color='magenta')
-plt.plot(primary_y_sort['Fsolid'],EQ_Nb,label="ENb", color='cyan')
+#plt.plot(primary_y_sort['Fsolid'],EQ_Si,label="ESi", color='blue', linestyle='dashed')
+plt.plot(primary_y_sort['Fsolid'],EQ_Cr,label="ECr", color='green', linestyle='dashed')
+plt.plot(primary_y_sort['Fsolid'],EQ_Fe,label="EFe", color='red', linestyle='dashed')
+plt.plot(primary_y_sort['Fsolid'],EQ_Ni,label="ENi", color='magenta', linestyle='dashed')
+#plt.plot(primary_y_sort['Fsolid'],EQ_Nb,label="ENb", color='cyan', linestyle='dashed')
 #plt.plot(primary_y_sort['Fsolid'],EQ_Mo,label="EMo")
-plt.plot(primary_y_sort['Fsolid'],EQ_Mn,label="EMn", color='black')
+#plt.plot(primary_y_sort['Fsolid'],EQ_Mn,label="EMn", color='black', linestyle='dashed')
 
 
 plt.xlabel('Fraction Solid')
 
 plt.ylabel('Concentration (wt.%)')
 
-plt.title("Concentration of Elements")
+#plt.title("Solidification Path Solidification")
+plt.xlim(0,1.0)
+plt.ylim(20,45)
+#plt.legend()
+#loc='best'
 
-plt.legend()
+plt.show()
+
+# %% Plot solidification path     Major Elements
+figure(num=None, figsize=(6, 4), dpi=100, facecolor='w', edgecolor='k')
+#plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Si Elemental Percents'],label="Si", color='blue')
+plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Cr Elemental Percents'],label="Cr", color='green')
+plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Fe Elemental Percents'],label="Fe", color='red')
+plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Ni Elemental Percents'],label="Ni", color='magenta')
+#plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Nb Elemental Percents'],label="Nb", color='cyan')
+#plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Mo Elemental Percents'],label="Mo")
+#plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Mn Elemental Percents'],label="Mn", color='black')
+
+
+#plt.plot(primary_y_sort['Fsolid'],NEQ_Si,label="NESi", color='blue')
+plt.plot(primary_y_sort['Fsolid'],NEQ_Cr,label="NECr", color='green')
+plt.plot(primary_y_sort['Fsolid'],NEQ_Fe,label="NEFe", color='red')
+plt.plot(primary_y_sort['Fsolid'],NEQ_Ni,label="NENi", color='magenta')
+#plt.plot(primary_y_sort['Fsolid'],NEQ_Nb,label="NENb", color='cyan')
+#plt.plot(primary_y_sort['Fsolid'],NEQ_Mo,label="NEMo")
+#plt.plot(primary_y_sort['Fsolid'],NEQ_Mn,label="NEMn", color='black')
+
+#plt.plot(primary_y_sort['Fsolid'],EQ_Si,label="ESi", color='blue', linestyle='dashed')
+plt.plot(primary_y_sort['Fsolid'],EQ_Cr,label="ECr", color='green', linestyle='dashed')
+plt.plot(primary_y_sort['Fsolid'],EQ_Fe,label="EFe", color='red', linestyle='dashed')
+plt.plot(primary_y_sort['Fsolid'],EQ_Ni,label="ENi", color='magenta', linestyle='dashed')
+#plt.plot(primary_y_sort['Fsolid'],EQ_Nb,label="ENb", color='cyan', linestyle='dashed')
+#plt.plot(primary_y_sort['Fsolid'],EQ_Mo,label="EMo")
+#plt.plot(primary_y_sort['Fsolid'],EQ_Mn,label="EMn", color='black', linestyle='dashed')
+
+
+plt.xlabel('Fraction Solid')
+
+plt.ylabel('Concentration (wt.%)')
+
+#plt.title("Solidification Path Solidification")
+plt.xlim(0,1.0)
+plt.ylim(20,45)
+#plt.legend()
+#loc='best'
+
+plt.show()
+
+# %% Minor Elements
+figure(num=None, figsize=(6, 4), dpi=100, facecolor='w', edgecolor='k')
+plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Si Elemental Percents'],label="Si", color='blue')
+plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Nb Elemental Percents'],label="Nb", color='cyan')
+#plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Mo Elemental Percents'],label="Mo")
+plt.plot(primary_y_sort['Fsolid'],primary_y_sort['Mn Elemental Percents'],label="Mn", color='black')
+
+
+plt.plot(primary_y_sort['Fsolid'],NEQ_Si,label="NESi", color='blue')
+plt.plot(primary_y_sort['Fsolid'],NEQ_Nb,label="NENb", color='cyan')
+#plt.plot(primary_y_sort['Fsolid'],NEQ_Mo,label="NEMo")
+plt.plot(primary_y_sort['Fsolid'],NEQ_Mn,label="NEMn", color='black')
+
+plt.plot(primary_y_sort['Fsolid'],EQ_Si,label="ESi", color='blue', linestyle='dashed')
+plt.plot(primary_y_sort['Fsolid'],EQ_Nb,label="ENb", color='cyan', linestyle='dashed')
+#plt.plot(primary_y_sort['Fsolid'],EQ_Mo,label="EMo")
+plt.plot(primary_y_sort['Fsolid'],EQ_Mn,label="EMn", color='black', linestyle='dashed')
+
+
+plt.xlabel('Fraction Solid')
+
+plt.ylabel('Concentration (wt.%)')
+
+#plt.title("Solidification Path Solidification")
+plt.xlim(0,1.0)
+#plt.ylim(20,45)
+#plt.legend()
 #loc='best'
 
 plt.show()
 
 
-
+# %% ??????
 #print(primary_y_sort['Si Elemental Percents'])
 #print(lnCs)
 #C=data['C']
@@ -502,5 +589,51 @@ plt.show()
 ## Print out the statistics
 #model.summary()
 # %% Output table?
+from prettytable import PrettyTable
+    
+x = PrettyTable()
 
+x.field_names = ["City name", "Area", "Population", "Annual Rainfall"]
+#['Si', 'Cr', 'Fe', 'Ni', 'Nb', 'Mn']
+x.add_row(["Adelaide", 1295, 1158259, 600.5])
+x.add_row(["Brisbane", 5905, 1857594, 1146.4])
+x.add_row(["Darwin", 112, 120900, 1714.7])
+x.add_row(["Hobart", 1357, 205556, 619.5])
+x.add_row(["Sydney", 2058, 4336374, 1214.8])
+x.add_row(["Melbourne", 1566, 3806092, 646.9])
+x.add_row(["Perth", 5386, 1554769, 869.4])
 
+print(x)
+# %% Bar Charts
+# libraries
+import numpy as np
+import matplotlib.pyplot as plt
+ 
+# set width of bar
+barWidth = 0.25
+ 
+# set height of bar
+bars1 = [KSi, KCr, KFe, KNi, KNb, KMn]
+bars2 = [KSic0, KCrc0, KFec0, KNic0, KNbc0, KMnc0]
+bars3 = [KSi_line, KCr_line, KFe_line, KNi_line, KNb_line, KMn_line]
+ 
+# Set position of bar on X axis
+r1 = np.arange(len(bars1))
+r2 = [x + barWidth for x in r1]
+r3 = [x + barWidth for x in r2]
+ 
+# Make the plot
+plt.bar(r1, bars1, color='#7f6d5f', width=barWidth, edgecolor='white', label='Kmean')
+plt.bar(r2, bars2, color='#557f2d', width=barWidth, edgecolor='white', label='KC0')
+plt.bar(r3, bars3, color='#2d7f5e', width=barWidth, edgecolor='white', label='K_line')
+ 
+# Add xticks on the middle of the group bars
+plt.xlabel('Element', fontweight='bold')
+plt.ylabel('Partition Coefficient (k)', fontweight='bold')
+plt.xticks([r + barWidth for r in range(len(bars1))], ['Si', 'Cr', 'Fe', 'Ni', 'Nb', 'Mn'])
+plt.axhline(1, color="black")#.plot(["Si","Mn"], [1,1], "k--")
+# Create legend & Show graphic
+plt.ylim(0,1.2)
+plt.legend()
+plt.show()
+#plt.savefig('M10 DTA K-values.png')
